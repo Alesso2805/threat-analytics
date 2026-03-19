@@ -19,9 +19,8 @@ public class SnifferApplication {
     private static final int SNAPLEN = 65536; 
     private static final int TIMEOUT = 10;  
 
-    // Estado para Detección de DDoS
     private static final ConcurrentHashMap<String, AtomicInteger> ipRequestCount = new ConcurrentHashMap<>();
-    private static final int DDOS_THRESHOLD = 50; // umbral de paquetes por segundo
+    private static final int DDOS_THRESHOLD = 50;
 
     public static void main(String[] args) throws PcapNativeException, NotOpenException {
         System.out.println("==================================================");
@@ -69,12 +68,11 @@ public class SnifferApplication {
             Thread.ofVirtual().start(() -> processPacket(rawPacket));
         };
 
-        // Hilo paralelo (Virtual Thread) para limpiar el contador cada segundo
         Thread.ofVirtual().start(() -> {
             while (true) {
                 try {
                     Thread.sleep(1000);
-                    ipRequestCount.clear(); // reiniciar conteo (ventana de 1 seg)
+                    ipRequestCount.clear();
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -104,16 +102,13 @@ public class SnifferApplication {
                 int srcPort = tcp.getHeader().getSrcPort().valueAsInt();
                 int dstPort = tcp.getHeader().getDstPort().valueAsInt();
 
-                // Contar paquetes por IP en el último segundo
                 int count = ipRequestCount.computeIfAbsent(sourceIp, k -> new AtomicInteger(0)).incrementAndGet();
 
                 if (count > DDOS_THRESHOLD) {
                     if (count == DDOS_THRESHOLD + 1) { 
-                        // Solo imprimimos la alerta fuerte una vez por segundo para no trabar la terminal
                         System.err.printf("🚨 [ALERTA DE SEGURIDAD] ¡Posible ataque DDoS / SYN Flood detectado! La IP %s envió más de %d paquetes en 1 segundo.%n", sourceIp, DDOS_THRESHOLD);
                     }
                 } else {
-                    // Imprimir tráfico normal
                     System.out.printf("[%s] -> 🔴 Conexión TCP Detectada: %s:%d -> %s:%d%n", 
                         Thread.currentThread().getName(), sourceIp, srcPort, destIp, dstPort);
                 }
