@@ -1,0 +1,20 @@
+# Compilados de Java
+*.class
+*.jar
+*.war
+
+# Carpetas de construcción (Maven)
+target/
+
+# Configuraciones de Entornos de Desarrollo (Eclipse / IntelliJ)
+.settings/
+.project
+.classpath
+.metadata/
+.idea/
+*.iml
+
+# Logs y Archivos Temporales del OS
+*.log
+.DS_Store
+Thumbs.db
